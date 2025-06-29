@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Liegestütz-Tracker</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #ffffff;
+        margin: 20px;
+        padding: 0;
+      }
+      h1 {
+        text-align: center;
+      }
+      #searchInput {
+        width: 100%;
+        max-width: 300px;
+        margin: 20px auto;
+        display: block;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      table {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border-bottom: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+      }
+      input[type='number'] {
+        width: 80px;
+        padding: 6px;
+      }
+      .highlight {
+        animation: blinkHighlight 1.5s ease-out;
+      }
+      @keyframes blinkHighlight {
+        0% {
+          background-color: #e0e0e0;
+        }
+        50% {
+          background-color: #f9f9f9;
+        }
+        100% {
+          background-color: white;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Liegestütz-Tracker</h1>
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Datum eingeben (z. B. 29.06.2025) & Enter drücken"
+    />
+
+    <table>
+      <thead>
+        <tr>
+          <th>Datum</th>
+          <th>Liegestütze</th>
+        </tr>
+      </thead>
+      <tbody id="trackerTable">
+        <!-- Hier werden die Zeilen per JavaScript generiert -->
+      </tbody>
+    </table>
+
+    <script>
+      const tableBody = document.getElementById('trackerTable');
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      endDate.setFullYear(endDate.getFullYear() + 5);
+
+      const formatDate = (date) => {
+        const d = String(date.getDate()).padStart(2, '0');
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const y = date.getFullYear();
+        return `${d}.${m}.${y}`;
+      };
+
+      const formatId = (date) => {
+        const d = String(date.getDate()).padStart(2, '0');
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const y = date.getFullYear();
+        return `row_${d}${m}${y}`;
+      };
+
+      for (
+        let d = new Date(startDate);
+        d <= endDate;
+        d.setDate(d.getDate() + 1)
+      ) {
+        const formatted = formatDate(d);
+        const id = formatId(d);
+        const savedValue = localStorage.getItem(id) || '';
+        const tr = document.createElement('tr');
+        tr.id = id;
+        tr.innerHTML = `<td>${formatted}</td><td><input type="number" value="${savedValue}" data-id="${id}"></td>`;
+        tableBody.appendChild(tr);
+      }
+
+      document.addEventListener('input', (e) => {
+        if (
+          e.target &&
+          e.target.tagName === 'INPUT' &&
+          e.target.type === 'number'
+        ) {
+          const id = e.target.dataset.id;
+          localStorage.setItem(id, e.target.value);
+        }
+      });
+
+      const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+          const val = this.value.trim().replaceAll('.', '');
+          const rowId = 'row_' + val;
+          const row = document.getElementById(rowId);
+          if (row) {
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            row.classList.add('highlight');
+            setTimeout(() => row.classList.remove('highlight'), 1500);
+          } else {
+            alert('Kein Eintrag für dieses Datum gefunden.');
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
