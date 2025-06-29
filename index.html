@@ -6,57 +6,110 @@
     <style>
       body {
         font-family: Arial, sans-serif;
-        background-color: #ffffff;
+        background-color: #1c1c1c;
+        color: #f0f0f0;
         margin: 20px;
         padding: 0;
       }
+
       h1 {
         text-align: center;
+        color: #00ffcc;
+        margin-bottom: 10px;
       }
+
+      #statsBox {
+        background-color: #262626;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px auto;
+        max-width: 600px;
+        box-shadow: 0 0 15px rgba(0, 255, 200, 0.2);
+        border: 1px solid #333;
+      }
+
+      #statsBox p {
+        margin: 5px 0;
+        font-size: 16px;
+      }
+
+      #statsBox p strong {
+        color: #7df9ff;
+      }
+
+      #statsBox em {
+        color: #ffd700;
+        font-style: normal;
+        font-weight: bold;
+      }
+
       #searchInput {
         width: 100%;
         max-width: 300px;
-        margin: 20px auto;
+        margin: 10px auto 20px;
         display: block;
         padding: 10px;
         font-size: 16px;
-        border: 1px solid #ccc;
+        border: none;
         border-radius: 5px;
+        background-color: #333;
+        color: white;
+        box-shadow: 0 0 5px #7df9ff;
       }
+
       table {
         width: 100%;
         max-width: 600px;
         margin: 0 auto;
         border-collapse: collapse;
       }
-      th,
+
+      th {
+        background-color: #333;
+        color: #7df9ff;
+        padding: 10px;
+      }
+
       td {
-        border-bottom: 1px solid #ddd;
+        border-bottom: 1px solid #444;
         padding: 10px;
         text-align: left;
       }
+
       input[type='number'] {
         width: 80px;
         padding: 6px;
+        background-color: #222;
+        color: #f0f0f0;
+        border: 1px solid #555;
+        border-radius: 5px;
+        box-shadow: 0 0 5px #444;
       }
+
       .highlight {
         animation: blinkHighlight 1.5s ease-out;
       }
+
       @keyframes blinkHighlight {
         0% {
-          background-color: #e0e0e0;
+          background-color: #ffb347;
         }
         50% {
-          background-color: #f9f9f9;
+          background-color: #ffd580;
         }
         100% {
-          background-color: white;
+          background-color: transparent;
         }
       }
     </style>
   </head>
   <body>
     <h1>Liegestütz-Tracker</h1>
+
+    <div id="statsBox">
+      <!-- Statistik & Motivation erscheinen hier -->
+    </div>
+
     <input
       type="text"
       id="searchInput"
@@ -71,35 +124,41 @@
         </tr>
       </thead>
       <tbody id="trackerTable">
-        <!-- Hier werden die Zeilen per JavaScript generiert -->
+        <!-- JavaScript füllt das automatisch -->
       </tbody>
     </table>
 
     <script>
       const tableBody = document.getElementById('trackerTable');
+      const statsBox = document.getElementById('statsBox');
+      const searchInput = document.getElementById('searchInput');
+
       const startDate = new Date();
       const endDate = new Date(startDate);
       endDate.setFullYear(endDate.getFullYear() + 5);
 
-      const formatDate = (date) => {
+      const allInputs = [];
+
+      function formatDate(date) {
         const d = String(date.getDate()).padStart(2, '0');
         const m = String(date.getMonth() + 1).padStart(2, '0');
         const y = date.getFullYear();
         return `${d}.${m}.${y}`;
-      };
+      }
 
-      const formatId = (date) => {
+      function formatId(date) {
         const d = String(date.getDate()).padStart(2, '0');
         const m = String(date.getMonth() + 1).padStart(2, '0');
         const y = date.getFullYear();
         return `row_${d}${m}${y}`;
-      };
+      }
 
       for (
         let d = new Date(startDate);
         d <= endDate;
         d.setDate(d.getDate() + 1)
       ) {
+        const dateCopy = new Date(d);
         const formatted = formatDate(d);
         const id = formatId(d);
         const savedValue = localStorage.getItem(id) || '';
@@ -107,6 +166,7 @@
         tr.id = id;
         tr.innerHTML = `<td>${formatted}</td><td><input type="number" value="${savedValue}" data-id="${id}"></td>`;
         tableBody.appendChild(tr);
+        allInputs.push({ date: dateCopy, id });
       }
 
       document.addEventListener('input', (e) => {
@@ -117,10 +177,10 @@
         ) {
           const id = e.target.dataset.id;
           localStorage.setItem(id, e.target.value);
+          updateStats();
         }
       });
 
-      const searchInput = document.getElementById('searchInput');
       searchInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
           const val = this.value.trim().replaceAll('.', '');
@@ -135,6 +195,64 @@
           }
         }
       });
+
+      function updateStats() {
+        const now = new Date();
+        let sum7 = 0,
+          sum30 = 0,
+          sum365 = 0,
+          sumAll = 0;
+        let todayId = formatId(now);
+        let todayCount = parseInt(localStorage.getItem(todayId) || '0', 10);
+
+        allInputs.forEach(({ date, id }) => {
+          const val = parseInt(localStorage.getItem(id) || '0', 10);
+          if (!isNaN(val)) {
+            const diffDays = (now - date) / (1000 * 60 * 60 * 24);
+            if (diffDays <= 7) sum7 += val;
+            if (diffDays <= 30) sum30 += val;
+            if (diffDays <= 365) sum365 += val;
+            sumAll += val;
+          }
+        });
+
+        let motivation = '';
+        if (todayCount === 0) {
+          motivation = '❗ Du hast heute noch keine Liegestütze gemacht – fang jetzt an!';
+        } else if (todayCount <= 20) {
+          motivation = '🙂 Guter Start – bleib dran!';
+        } else if (todayCount < 50) {
+          motivation = '💪 Stark! Weiter so!';
+        } else {
+          motivation = '🔥 Du bist eine Maschine – Respekt!';
+        }
+
+        statsBox.innerHTML = `
+          <p><strong>Letzte 7 Tage:</strong> ${sum7}</p>
+          <p><strong>Letzte 30 Tage:</strong> ${sum30}</p>
+          <p><strong>Letzte 365 Tage:</strong> ${sum365}</p>
+          <p><strong>Insgesamt:</strong> ${sumAll}</p>
+          <hr style="margin: 10px 0; border: none; border-top: 1px solid #444;">
+          <p><em>${motivation}</em></p>
+        `;
+      }
+
+      function scrollToToday() {
+        const todayId = formatId(new Date());
+        const row = document.getElementById(todayId);
+        if (row) {
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          row.classList.add('highlight');
+          setTimeout(() => row.classList.remove('highlight'), 1500);
+        }
+      }
+
+      // Beim Laden scrollen und Statistiken anzeigen
+      window.addEventListener('load', () => {
+        scrollToToday();
+        updateStats();
+      });
     </script>
   </body>
 </html>
+
