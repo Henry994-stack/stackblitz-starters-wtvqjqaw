@@ -7,7 +7,7 @@
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-   <style>
+    <style>
       body {
         font-family: Arial, sans-serif;
         background-color: #1c1c1c;
@@ -157,11 +157,7 @@
         return `row_${d}${m}${y}`;
       }
 
-      for (
-        let d = new Date(startDate);
-        d <= endDate;
-        d.setDate(d.getDate() + 1)
-      ) {
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
         const dateCopy = new Date(d);
         const formatted = formatDate(d);
         const id = formatId(d);
@@ -174,11 +170,7 @@
       }
 
       document.addEventListener('input', (e) => {
-        if (
-          e.target &&
-          e.target.tagName === 'INPUT' &&
-          e.target.type === 'number'
-        ) {
+        if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'number') {
           const id = e.target.dataset.id;
           localStorage.setItem(id, e.target.value);
           updateStats();
@@ -202,10 +194,7 @@
 
       function updateStats() {
         const now = new Date();
-        let sum7 = 0,
-          sum30 = 0,
-          sum365 = 0,
-          sumAll = 0;
+        let sum7 = 0, sum30 = 0, sum365 = 0, sumAll = 0;
         let todayId = formatId(now);
         let todayCount = parseInt(localStorage.getItem(todayId) || '0', 10);
 
@@ -251,12 +240,35 @@
         }
       }
 
-      // Beim Laden scrollen und Statistiken anzeigen
+      function requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission !== 'granted') {
+          Notification.requestPermission();
+        }
+      }
+
+      function scheduleNotification() {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          const now = new Date();
+          const target = new Date();
+          target.setHours(16, 0, 0, 0);
+          if (now > target) target.setDate(target.getDate() + 1);
+
+          const timeout = target.getTime() - now.getTime();
+          setTimeout(() => {
+            new Notification('Zeit für Liegestütze!', {
+              body: '💪 Vergiss nicht dein Training heute!',
+            });
+            scheduleNotification();
+          }, timeout);
+        }
+      }
+
       window.addEventListener('load', () => {
         scrollToToday();
         updateStats();
+        requestNotificationPermission();
+        scheduleNotification();
       });
     </script>
   </body>
 </html>
-
