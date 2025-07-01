@@ -1,512 +1,355 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Liegestütz Tracker</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #121212;
-    color: #7df9ff;
-    margin: 0;
-    padding: 20px;
-    transition: background-color 0.3s, color 0.3s;
-  }
-  body.light-mode {
-    background-color: #f0f0f0;
-    color: #007f7f;
-  }
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  #settings-icon {
-    cursor: pointer;
-    font-size: 24px;
-    user-select: none;
-    color: inherit;
-  }
-  #settings-menu {
-    position: absolute;
-    top: 50px;
-    right: 20px;
-    background: rgba(0,0,0,0.8);
-    border-radius: 8px;
-    padding: 15px;
-    display: none;
-    width: 220px;
-    color: #7df9ff;
-    z-index: 100;
-  }
-  body.light-mode #settings-menu {
-    background: #ddd;
-    color: #007f7f;
-  }
-  #notification-toggle-menu {
-    margin-top: 10px;
-    background: rgba(0,0,0,0.6);
-    padding: 10px;
-    border-radius: 6px;
-    display: none;
-  }
-  body.light-mode #notification-toggle-menu {
-    background: #bbb;
-  }
-  label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-  }
-  input[type="checkbox"] {
-    transform: scale(1.3);
-  }
-  select, input[type="number"], input[type="text"] {
-    width: 100%;
-    margin-top: 5px;
-    margin-bottom: 15px;
-    padding: 5px;
-    border-radius: 4px;
-    border: 1px solid #007f7f;
-    background-color: transparent;
-    color: inherit;
-  }
-  body.light-mode select, body.light-mode input[type="number"], body.light-mode input[type="text"] {
-    border-color: #007f7f;
-    background-color: #fff;
-    color: #007f7f;
-  }
-  button {
-    background-color: #00ffcc;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 6px;
-    color: #004d40;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  button:hover {
-    background-color: #00cc99;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-  }
-  th, td {
-    padding: 8px;
-    border-bottom: 1px solid #007f7f;
-    text-align: center;
-  }
-  body.light-mode th, body.light-mode td {
-    border-color: #004d40;
-  }
-  #progress-bar-container {
-    width: 100%;
-    background-color: #444;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-top: 20px;
-    height: 25px;
-  }
-  #progress-bar {
-    height: 100%;
-    background-color: #00ffcc;
-    width: 0%;
-    transition: width 0.5s ease-in-out;
-  }
-  #chart-container {
-    margin-top: 30px;
-  }
-</style>
-</head>
-<body class="dark-mode">
-<header>
-  <h1>Liegestütz Tracker</h1>
-  <div id="settings-icon" title="Einstellungen">&#9881;</div>
-</header>
+import React, { useState, useEffect, useRef } from 'react';
 
-<div id="settings-menu" role="menu" aria-label="Einstellungen Menü">
-  <label for="dark-toggle">
-    <input type="checkbox" id="dark-toggle" />
-    Dark Mode aktivieren
-  </label>
+const startDate = new Date();
+const endDate = new Date(startDate);
+endDate.setFullYear(endDate.getFullYear() + 5);
 
-  <label for="date-filter">
-    Zeitraum filtern:
-    <select id="date-filter" aria-label="Zeitraum Filter">
-      <option value="all">Alle Einträge</option>
-      <option value="7">Letzte 7 Tage</option>
-      <option value="30">Letzte 30 Tage</option>
-      <option value="90">Letzte 90 Tage</option>
-    </select>
-  </label>
+function formatDate(date) {
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const y = date.getFullYear();
+  return ${d}.${m}.${y};
+}
 
-  <label for="daily-target">
-    Tagesziel Liegestütze:
-    <input type="number" id="daily-target" min="1" max="1000" />
-  </label>
+function formatId(date) {
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const y = date.getFullYear();
+  return row_${d}${m}${y};
+}
 
-  <label for="font-select">
-    Schriftart:
-    <select id="font-select" aria-label="Schriftart Auswahl">
-      <option value="Arial, sans-serif">Arial</option>
-      <option value="'Courier New', monospace">Courier New</option>
-      <option value="'Georgia', serif">Georgia</option>
-      <option value="'Times New Roman', serif">Times New Roman</option>
-      <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
-      <option value="'Verdana', sans-serif">Verdana</option>
-    </select>
-  </label>
-
-  <label id="notification-toggle" style="cursor:pointer; user-select:none;">
-    Benachrichtigungen &nbsp;&#x25BC;
-  </label>
-  <div id="notification-toggle-menu" role="menu" aria-label="Benachrichtigungs Optionen">
-    <label for="enable-notifications">
-      <input type="checkbox" id="enable-notifications" />
-      Benachrichtigungen aktivieren
-    </label>
-  </div>
-
-  <button id="export-btn" aria-label="Daten exportieren">Daten exportieren</button>
-</div>
-
-<div style="margin-top: 20px;">
-  <input type="text" id="search-input" placeholder="Nach Datum suchen (TT.MM.JJJJ)" aria-label="Datum Suche" />
-</div>
-
-<table aria-label="Eingabedaten Tabelle" id="data-table">
-  <thead>
-    <tr><th>Datum</th><th>Liegestütze</th></tr>
-  </thead>
-  <tbody>
-  </tbody>
-</table>
-
-<div id="progress-bar-container" aria-label="Fortschrittsbalken">
-  <div id="progress-bar"></div>
-</div>
-
-<div id="chart-container">
-  <canvas id="progress-chart" aria-label="Fortschrittsdiagramm"></canvas>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  const settingsIcon = document.getElementById('settings-icon');
-  const settingsMenu = document.getElementById('settings-menu');
-  const notificationToggle = document.getElementById('notification-toggle');
-  const notificationToggleMenu = document.getElementById('notification-toggle-menu');
-  const enableNotificationsCheckbox = document.getElementById('enable-notifications');
-  const darkToggle = document.getElementById('dark-toggle');
-  const dateFilter = document.getElementById('date-filter');
-  const dailyTargetInput = document.getElementById('daily-target');
-  const fontSelect = document.getElementById('font-select');
-  const exportBtn = document.getElementById('export-btn');
-  const searchInput = document.getElementById('search-input');
-  const dataTableBody = document.querySelector('#data-table tbody');
-  const progressBar = document.getElementById('progress-bar');
-  const ctx = document.getElementById('progress-chart').getContext('2d');
-
-  let allInputs = [];
-  let dailyTarget = 30;
-  let progressChart = null;
-
-  // Beispiel-Daten (kann leer sein, falls eigene Daten gewünscht)
-  if (!localStorage.getItem('liegestuetzData')) {
-    allInputs = [
-      { date: '01.06.2025', value: '20' },
-      { date: '02.06.2025', value: '25' },
-      { date: '03.06.2025', value: '30' },
-      { date: '04.06.2025', value: '35' },
-      { date: '05.06.2025', value: '40' },
-    ];
-    localStorage.setItem('liegestuetzData', JSON.stringify(allInputs));
-  }
-
-  function parseDateString(str) {
-    const parts = str.split('.');
-    if (parts.length !== 3) return null;
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const year = parseInt(parts[2], 10);
-    return new Date(year, month, day);
-  }
-
-  function loadData() {
-    const saved = localStorage.getItem('liegestuetzData');
-    if (saved) {
-      allInputs = JSON.parse(saved);
-    }
-    const savedTarget = localStorage.getItem('dailyTarget');
-    if (savedTarget) {
-      dailyTarget = parseInt(savedTarget);
-      dailyTargetInput.value = dailyTarget;
-    } else {
-      dailyTargetInput.value = dailyTarget;
-    }
-    const darkMode = localStorage.getItem('darkMode');
-    if (darkMode === 'true') {
-      darkToggle.checked = true;
-      document.body.classList.remove('light-mode');
-    } else {
-      darkToggle.checked = false;
-      document.body.classList.add('light-mode');
-    }
-    const savedFont = localStorage.getItem('fontFamily');
-    if (savedFont) {
-      fontSelect.value = savedFont;
-      document.body.style.fontFamily = savedFont;
-    }
-    const notificationsEnabled = localStorage.getItem('notificationsEnabled') === 'true';
-    enableNotificationsCheckbox.checked = notificationsEnabled;
-  }
-
-  function saveData() {
-    localStorage.setItem('liegestuetzData', JSON.stringify(allInputs));
-    localStorage.setItem('dailyTarget', dailyTarget);
-    localStorage.setItem('darkMode', darkToggle.checked);
-    localStorage.setItem('fontFamily', fontSelect.value);
-    localStorage.setItem('notificationsEnabled', enableNotificationsCheckbox.checked);
-  }
-
-  function updateTable(searchDate = '') {
-    dataTableBody.innerHTML = '';
-    const filtered = searchDate
-      ? allInputs.filter(e => e.date === searchDate)
-      : applyDateFilter(allInputs);
-
-    filtered.sort((a, b) => {
-      const d1 = parseDateString(a.date);
-      const d2 = parseDateString(b.date);
-      return d1 - d2;
-    });
-
-    if (filtered.length === 0) {
-      const tr = document.createElement('tr');
-      const td = document.createElement('td');
-      td.colSpan = 2;
-      td.textContent = 'Keine Einträge gefunden.';
-      td.style.textAlign = 'center';
-      tr.appendChild(td);
-      dataTableBody.appendChild(tr);
-      return;
-    }
-
-    for (const e of filtered) {
-      const tr = document.createElement('tr');
-      const tdDate = document.createElement('td');
-      tdDate.textContent = e.date;
-      const tdValue = document.createElement('td');
-      tdValue.textContent = e.value;
-      tr.appendChild(tdDate);
-      tr.appendChild(tdValue);
-      dataTableBody.appendChild(tr);
-    }
-  }
-
-  function applyDateFilter(data) {
-    const val = dateFilter.value;
-    if (val === 'all') return data;
-    const days = parseInt(val);
-    const now = new Date();
-    return data.filter(e => {
-      const entryDate = parseDateString(e.date);
-      if (!entryDate) return false;
-      const diffTime = now - entryDate;
-      const diffDays = diffTime / (1000 * 60 * 60 * 24);
-      return diffDays >= 0 && diffDays < days;
-    });
-  }
-
-  function updateStats() {
-    // Berechne durchschnittliche Liegestütze pro Tag im gefilterten Zeitraum
-    const filtered = applyDateFilter(allInputs);
-    if (filtered.length === 0) return;
-    let total = 0;
-    for (const e of filtered) {
-      total += parseInt(e.value) || 0;
-    }
-    const avg = total / filtered.length;
-    // Du kannst hier noch weitere Statistiken hinzufügen
-  }
-
-  function updateProgressBar() {
-    const filtered = applyDateFilter(allInputs);
-    if (filtered.length === 0) {
-      progressBar.style.width = '0%';
-      return;
-    }
-    const today = new Date();
-    const todayStr = `${String(today.getDate()).padStart(2,'0')}.${String(today.getMonth()+1).padStart(2,'0')}.${today.getFullYear()}`;
-    const todayEntry = filtered.find(e => e.date === todayStr);
-    let valueToday = 0;
-    if (todayEntry) valueToday = parseInt(todayEntry.value) || 0;
-    let progress = (valueToday / dailyTarget) * 100;
-    if (progress > 100) progress = 100;
-    progressBar.style.width = progress + '%';
-  }
-
-  function updateChart() {
-    const filteredData = applyDateFilter(allInputs);
-    filteredData.sort((a, b) => {
-      const d1 = parseDateString(a.date);
-      const d2 = parseDateString(b.date);
-      return d1 - d2;
-    });
-
-    const labels = filteredData.map(e => e.date);
-    const dataValues = filteredData.map(e => parseInt(e.value) || 0);
-
-    if (progressChart) {
-      progressChart.destroy();
-    }
-    progressChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Liegestütze',
-          data: dataValues,
-          fill: true,
-          borderColor: '#00ffcc',
-          backgroundColor: 'rgba(0, 255, 204, 0.2)',
-          tension: 0.3,
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          pointBackgroundColor: '#00ffcc',
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            labels: {
-              color: document.body.classList.contains('light-mode') ? '#007f7f' : '#7df9ff'
-            }
-          }
-        },
-        scales: {
-          x: {
-            ticks: {
-              color: document.body.classList.contains('light-mode') ? '#007f7f' : '#7df9ff',
-            },
-            grid: {
-              color: document.body.classList.contains('light-mode') ? '#ccc' : '#444',
-            }
-          },
-          y: {
-            beginAtZero: true,
-            ticks: {
-              color: document.body.classList.contains('light-mode') ? '#007f7f' : '#7df9ff',
-            },
-            grid: {
-              color: document.body.classList.contains('light-mode') ? '#ccc' : '#444',
-            }
-          }
-        }
+export default function LiegestuetzTracker() {
+  const [inputs, setInputs] = useState(() => {
+    // Lade aus localStorage oder initialisiere mit '' oder '/' wenn vergangen
+    const arr = [];
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateCopy = new Date(d);
+      const id = formatId(dateCopy);
+      let savedValue = localStorage.getItem(id);
+      const now = new Date();
+      if (!savedValue) {
+        savedValue = dateCopy < new Date(now.getFullYear(), now.getMonth(), now.getDate()) ? '/' : '';
       }
-    });
+      arr.push({ date: new Date(dateCopy), id, value: savedValue });
+    }
+    return arr;
+  });
+
+  const [darkMode, setDarkMode] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [notifMenuOpen, setNotifMenuOpen] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => localStorage.getItem('notificationsEnabled') === 'true');
+  const [filter, setFilter] = useState('all');
+  const [searchDate, setSearchDate] = useState('');
+  const tableRef = useRef(null);
+
+  // Update localStorage bei Eingabe
+  function onInputChange(id, val) {
+    if (val === '' || /^[0-9]+$/.test(val)) {
+      setInputs((old) =>
+        old.map((item) => (item.id === id ? { ...item, value: val } : item))
+      );
+      localStorage.setItem(id, val);
+    }
   }
 
-  // --- Event Listeners ---
+  // Fortschritt und Statistik berechnen
+  const stats = React.useMemo(() => {
+    const now = new Date();
+    let sum7 = 0,
+      sum30 = 0,
+      sum365 = 0,
+      sumAll = 0;
 
-  settingsIcon.addEventListener('click', () => {
-    if (settingsMenu.style.display === 'block') {
-      settingsMenu.style.display = 'none';
-      notificationToggleMenu.style.display = 'none';
+    inputs.forEach(({ date, value }) => {
+      let val = value === '/' ? 0 : parseInt(value, 10);
+      if (isNaN(val)) val = 0;
+      const diffDays = (now - date) / (1000 * 60 * 60 * 24);
+      if (diffDays <= 7) sum7 += val;
+      if (diffDays <= 30) sum30 += val;
+      if (diffDays <= 365) sum365 += val;
+      sumAll += val;
+    });
+
+    return { sum7, sum30, sum365, sumAll };
+  }, [inputs]);
+
+  // Motivationstext
+  const todayId = formatId(new Date());
+  const todayValue = inputs.find((i) => i.id === todayId)?.value || '0';
+  const todayCount = todayValue === '/' ? 0 : parseInt(todayValue, 10) || 0;
+
+  let motivation = '';
+  if (todayCount === 0) motivation = 'Du hast heute noch keine Liegestütze gemacht. Los geht\'s! 💪';
+  else if (todayCount < 20) motivation = 'Guter Start heute! Weiter so! 🔥';
+  else if (todayCount < 50) motivation = 'Stark! Du machst Fortschritte! 🚀';
+  else motivation = 'Wow! Du bist richtig fit! 👏';
+
+  // Fortschrittsbalken in Prozent
+  const progressPercent = Math.min((stats.sumAll / 1000) * 100, 100);
+
+  // Dark Mode body class toggeln
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
     } else {
-      settingsMenu.style.display = 'block';
+      document.documentElement.classList.remove('dark');
     }
-  });
+  }, [darkMode]);
 
-  notificationToggle.addEventListener('click', () => {
-    if (notificationToggleMenu.style.display === 'block') {
-      notificationToggleMenu.style.display = 'none';
-    } else {
-      notificationToggleMenu.style.display = 'block';
+  // Notifications toggle speichern
+  useEffect(() => {
+    localStorage.setItem('notificationsEnabled', notificationsEnabled ? 'true' : 'false');
+  }, [notificationsEnabled]);
+
+  // Suche scrollt zur Zeile
+  function onSearchEnter(e) {
+    if (e.key === 'Enter') {
+      const val = searchDate.trim().replace(/\./g, '');
+      const rowId = 'row_' + val;
+      const el = document.getElementById(rowId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('animate-pulse', 'bg-yellow-300');
+        setTimeout(() => el.classList.remove('animate-pulse', 'bg-yellow-300'), 1500);
+      } else {
+        alert('Kein Eintrag für dieses Datum gefunden.');
+      }
     }
-  });
+  }
 
-  enableNotificationsCheckbox.addEventListener('change', () => {
-    saveData();
-  });
-
-  darkToggle.addEventListener('change', () => {
-    if (darkToggle.checked) {
-      document.body.classList.remove('light-mode');
-    } else {
-      document.body.classList.add('light-mode');
-    }
-    updateChart();
-    saveData();
-  });
-
-  dateFilter.addEventListener('change', () => {
-    updateTable();
-    updateStats();
-    updateProgressBar();
-    updateChart();
-  });
-
-  dailyTargetInput.addEventListener('input', () => {
-    let val = parseInt(dailyTargetInput.value);
-    if (isNaN(val) || val < 1) val = 1;
-    if (val > 1000) val = 1000;
-    dailyTarget = val;
-    dailyTargetInput.value = val;
-    updateStats();
-    updateProgressBar();
-    saveData();
-  });
-
-  fontSelect.addEventListener('change', () => {
-    document.body.style.fontFamily = fontSelect.value;
-    saveData();
-  });
-
-  exportBtn.addEventListener('click', () => {
-    const dataStr = JSON.stringify(allInputs, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
+  // Daten exportieren als CSV
+  function exportCSV() {
+    let csv = 'Datum,Liegestütze\n';
+    inputs.forEach(({ date, value }) => {
+      const val = value === '/' ? '' : value;
+      csv += ${formatDate(date)},${val}\n;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'liegestuetz-data.json';
+    a.download = 'liegestuetz-daten.csv';
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  // Gefilterte Inputs nach Datum
+  const filteredInputs = inputs.filter(({ date }) => {
+    const now = new Date();
+    const diffDays = (now - date) / (1000 * 60 * 60 * 24);
+    if (filter === 'all') return true;
+    if (filter === '7') return diffDays <= 7;
+    if (filter === '30') return diffDays <= 30;
+    if (filter === '365') return diffDays <= 365;
+    return true;
   });
 
-  searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      const searchDate = searchInput.value.trim();
-      if (searchDate) {
-        updateTable(searchDate);
-        updateStats();
-        updateProgressBar();
-        updateChart();
-      }
+  // Beim Laden heute scrollen
+  useEffect(() => {
+    const todayRow = document.getElementById(todayId);
+    if (todayRow) {
+      todayRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      todayRow.classList.add('animate-pulse', 'bg-yellow-300');
+      setTimeout(() => todayRow.classList.remove('animate-pulse', 'bg-yellow-300'), 1500);
     }
-  });
+  }, [todayId]);
 
-  // Schließe das Settings-Menü, wenn man irgendwo anders klickt
-  document.addEventListener('click', (e) => {
-    if (!settingsMenu.contains(e.target) && e.target !== settingsIcon) {
-      settingsMenu.style.display = 'none';
-      notificationToggleMenu.style.display = 'none';
-    }
-  });
+  return (
+    <div className="min-h-screen bg-gray-900 text-gray-100 p-4 dark:bg-gray-800 dark:text-gray-200 transition-colors">
+      <header className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-cyan-400">Liegestütz-Tracker</h1>
+        <button
+          onClick={() => {
+            setSettingsOpen(true);
+            setNotifMenuOpen(false);
+          }}
+          aria-label="Einstellungen öffnen"
+          className="text-3xl"
+        >
+          ⚙
+        </button>
+      </header>
 
-  // --- Initialisierung ---
-  loadData();
-  updateTable();
-  updateStats();
-  updateProgressBar();
-  updateChart();
+      {/* SlideOver Settings */}
+      {settingsOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end">
+          <div className="w-80 bg-gray-800 p-6 dark:bg-gray-900 shadow-lg">
+            <h2 className="text-xl font-semibold mb-4">Einstellungen</h2>
+            <ul>
+              <li
+                className="cursor-pointer mb-2 text-cyan-400 hover:text-cyan-300"
+                onClick={() => setNotifMenuOpen(!notifMenuOpen)}
+              >
+                🔔 Benachrichtigungen
+              </li>
+            </ul>
 
-</script>
-</body>
-</html>
+            {notifMenuOpen && (
+              <div className="mt-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={notificationsEnabled}
+                    onChange={() => setNotificationsEnabled(!notificationsEnabled)}
+                    className="cursor-pointer"
+                  />
+                  <span>Benachrichtigungen aktivieren</span>
+                </label>
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-between items-center">
+              <button
+                onClick={() => setSettingsOpen(false)}
+                className="bg-cyan-600 px-4 py-2 rounded hover:bg-cyan-500"
+              >
+                Schließen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Statistiken */}
+      <section
+        id="statsBox"
+        className="max-w-xl mx-auto bg-gray-800 rounded-lg p-4 shadow-md mb-6 border border-cyan-500"
+      >
+        <p>
+          <strong>Letzte 7 Tage:</strong> {stats.sum7} Liegestütze
+        </p>
+        <p>
+          <strong>Letzte 30 Tage:</strong> {stats.sum30} Liegestütze
+        </p>
+        <p>
+          <strong>Letztes Jahr:</strong> {stats.sum365} Liegestütze
+        </p>
+        <p>
+          <strong>Gesamt:</strong> {stats.sumAll} Liegestütze
+        </p>
+        <p className="mt-2 italic text-yellow-400 font-semibold">{motivation}</p>
+
+        <div className="mt-4 bg-cyan-600 rounded-full overflow-hidden h-6">
+          <div
+            className="h-6 bg-gradient-to-r from-cyan-400 to-teal-700 text-white text-right pr-2 text-sm font-semibold transition-all"
+            style={{ width: ${progressPercent}% }}
+          >
+            {Math.round(progressPercent)}%
+          </div>
+        </div>
+      </section>
+
+      {/* Filter & Suche */}
+      <section className="max-w-xl mx-auto flex flex-col md:flex-row gap-4 mb-6 items-center">
+        <div className="flex space-x-2 text-gray-300">
+          <button
+            className={`px-3 py-1 rounded ${
+              filter === 'all' ? 'bg-cyan-600' : 'hover:bg-cyan-600'
+            }`}
+            onClick={() => setFilter('all')}
+          >
+            Alle
+          </button>
+          <button
+            className={`px-3 py-1 rounded ${
+              filter === '7' ? 'bg-cyan-600' : 'hover:bg-cyan-600'
+            }`}
+            onClick={() => setFilter('7')}
+          >
+            Letzte 7 Tage
+          </button>
+          <button
+            className={`px-3 py-1 rounded ${
+              filter === '30' ? 'bg-cyan-600' : 'hover:bg-cyan-600'
+            }`}
+            onClick={() => setFilter('30')}
+          >
+            Letzte 30 Tage
+          </button>
+          <button
+            className={`px-3 py-1 rounded ${
+              filter === '365' ? 'bg-cyan-600' : 'hover:bg-cyan-600'
+            }`}
+            onClick={() => setFilter('365')}
+          >
+            Letztes Jahr
+          </button>
+        </div>
+
+        <input
+          type="text"
+          placeholder="Datum suchen (dd.mm.yyyy) + Enter"
+          value={searchDate}
+          onChange={(e) => setSearchDate(e.target.value)}
+          onKeyDown={onSearchEnter}
+          className="p-2 rounded text-gray-900 dark:text-gray-900"
+        />
+
+        <button
+          onClick={exportCSV}
+          className="bg-cyan-600 px-4 py-2 rounded hover:bg-cyan-500"
+          aria-label="Daten als CSV exportieren"
+        >
+          Export CSV
+        </button>
+      </section>
+
+      {/* Tabelle */}
+      <section
+        className="max-w-xl mx-auto overflow-auto"
+        ref={tableRef}
+        aria-label="Liegestütz Eingabetabelle"
+      >
+        <table className="w-full table-auto border-collapse border border-gray-700">
+          <thead className="bg-gray-700 sticky top-0">
+            <tr>
+              <th className="border border-gray-600 px-3 py-1">Datum</th>
+              <th className="border border-gray-600 px-3 py-1">Liegestütze</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredInputs.map(({ date, id, value }) => (
+              <tr
+                key={id}
+                id={id}
+                className={`border border-gray-700 ${
+                  id === todayId ? 'bg-yellow-300 animate-pulse font-bold text-gray-900' : ''
+                }`}
+              >
+                <td className="border border-gray-600 px-3 py-1 whitespace-nowrap">
+                  {formatDate(date)}
+                </td>
+                <td className="border border-gray-600 px-3 py-1 text-center">
+                  {value === '/' ? (
+                    <span className="text-gray-500 select-none">/</span>
+                  ) : (
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={4}
+                      className="w-20 text-center rounded border border-gray-500 bg-gray-900 dark:bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                      value={value}
+                      onChange={(e) => onInputChange(id, e.target.value)}
+                      aria-label={Liegestütze am ${formatDate(date)}}
+                    />
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      {/* Dark Mode Toggle unten rechts */}
+      <button
+        onClick={() => setDarkMode(!darkMode)}
+        aria-label="Dark Mode umschalten"
+        className="fixed bottom-5 right-5 bg-cyan-700 hover:bg-cyan-600 text-white rounded-full p-3 shadow-lg"
+      >
+        {darkMode ? '🌙' : '☀'}
+      </button>
+    </div>
+  );
+}
