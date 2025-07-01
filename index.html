@@ -290,10 +290,11 @@
     });
 
     // Fortschrittsanzeige (heute / 1000)
-    const progressPercent = Math.min(100, (todayCount / 1000) * 100);
-    progressBar.style.width = progressPercent + '%';
-    progressBar.textContent = `${todayCount} / 1000`;
-
+    const maxLiegestuetze = 50;
+const progressPercent = Math.min(100, (todayCount / maxLiegestuetze) * 100);
+progressBar.style.width = progressPercent + '%';
+progressBar.textContent = `${todayCount} / ${maxLiegestuetze}`;
+    
     statsBox.innerHTML = `
       <p><strong>Heute:</strong> ${todayCount} Liegestütze</p>
       <p><strong>Letzte 7 Tage:</strong> ${sum7}</p>
