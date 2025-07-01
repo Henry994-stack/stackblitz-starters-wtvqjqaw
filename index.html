@@ -416,6 +416,17 @@
       });
 
       updateStats();
+
+      // Beim Laden zur heutigen Zeile scrollen
+window.addEventListener('load', () => {
+  const todayId = formatId(new Date());
+  const todayRow = document.getElementById(todayId);
+  if (todayRow) {
+    todayRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    todayRow.classList.add('highlight');
+    setTimeout(() => todayRow.classList.remove('highlight'), 1500);
+  }
+});
     </script>
   </body>
 </html>
