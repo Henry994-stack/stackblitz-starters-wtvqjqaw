@@ -7,8 +7,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <style>
+  /* --- Grundstyles --- */
   body {
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #1c1c1c;
     color: #f0f0f0;
     margin: 20px;
@@ -20,15 +21,17 @@
     color: #00ffcc;
     margin-bottom: 10px;
   }
+  /* Einstellungen-Icon */
   #settingsIcon {
     position: fixed;
     top: 10px;
     right: 10px;
-    font-size: 48px;
+    font-size: 40px;
     cursor: pointer;
     z-index: 1000;
     user-select: none;
   }
+  /* Menü */
   #settingsMenu {
     position: fixed;
     top: 60px;
@@ -36,16 +39,17 @@
     background-color: #2c2c2c;
     border: 1px solid #444;
     border-radius: 10px;
-    padding: 10px;
-    box-shadow: 0 0 10px rgba(0, 255, 200, 0.3);
+    padding: 15px;
+    box-shadow: 0 0 15px rgba(0, 255, 200, 0.3);
     display: none;
     z-index: 999;
-    width: 200px;
+    width: 230px;
+    font-size: 14px;
   }
   #settingsMenu ul {
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: 0 0 10px 0;
   }
   #settingsMenu li {
     padding: 8px;
@@ -55,14 +59,18 @@
   #settingsMenu li:hover {
     background-color: #444;
   }
-  #notificationToggleMenu {
-    display: none;
+  #notificationToggleMenu,
+  #fontSelectContainer,
+  #targetInputContainer {
     margin-top: 10px;
     color: #fff;
   }
-  #notificationToggleMenu label {
+  #notificationToggleMenu label,
+  #targetInputContainer label {
     cursor: pointer;
+    user-select: none;
   }
+  /* Statsbox */
   #statsBox {
     background-color: #262626;
     padding: 20px;
@@ -84,6 +92,7 @@
     font-style: normal;
     font-weight: bold;
   }
+  /* Suche */
   #searchInput {
     width: 100%;
     max-width: 300px;
@@ -97,10 +106,11 @@
     color: white;
     box-shadow: 0 0 5px #7df9ff;
   }
+  /* Tabelle */
   table {
     width: 100%;
     max-width: 600px;
-    margin: 0 auto;
+    margin: 0 auto 20px auto;
     border-collapse: collapse;
   }
   th {
@@ -121,20 +131,94 @@
     border: 1px solid #555;
     border-radius: 5px;
     box-shadow: 0 0 5px #444;
+    transition: background-color 0.3s, color 0.3s;
   }
+  input[type='text']:focus {
+    outline: none;
+    border-color: #00ffcc;
+    box-shadow: 0 0 8px #00ffcc;
+    background-color: #003333;
+  }
+  /* Highlight Animation */
   .highlight {
     animation: blinkHighlight 1.5s ease-out;
   }
   @keyframes blinkHighlight {
-    0% {
-      background-color: #ffb347;
+    0% { background-color: #ffb347; }
+    50% { background-color: #ffd580; }
+    100% { background-color: transparent; }
+  }
+  /* Fortschrittsbalken */
+  #progressBarContainer {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto 20px;
+    background: #444;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 10px #00ffcc inset;
+  }
+  #progressBar {
+    height: 25px;
+    width: 0%;
+    background: linear-gradient(90deg, #00ffcc, #007f7f);
+    text-align: right;
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    padding-right: 8px;
+    transition: width 0.6s ease;
+  }
+  /* Responsive */
+  @media (max-width: 650px) {
+    body {
+      margin: 10px;
     }
-    50% {
-      background-color: #ffd580;
+    #settingsMenu {
+      width: 90%;
+      right: 5%;
+      top: 55px;
     }
-    100% {
-      background-color: transparent;
+    table, #statsBox, #progressBarContainer {
+      max-width: 100%;
     }
+    #searchInput {
+      max-width: 100%;
+    }
+  }
+  /* Dark Mode helle Variante */
+  body.light-mode {
+    background-color: #fff;
+    color: #000;
+  }
+  body.light-mode input[type='text'] {
+    background-color: #f7f7f7;
+    color: #000;
+    border: 1px solid #ccc;
+    box-shadow: none;
+  }
+  body.light-mode #settingsMenu {
+    background-color: #eee;
+    color: #000;
+    border: 1px solid #bbb;
+    box-shadow: 0 0 15px rgba(0, 200, 150, 0.3);
+  }
+  body.light-mode #settingsMenu li:hover {
+    background-color: #ddd;
+  }
+  /* Chart Container */
+  #chartContainer {
+    max-width: 600px;
+    margin: 10px auto 30px;
+    background: #262626;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 0 15px rgba(0, 255, 200, 0.3);
+    color: #7df9ff;
+  }
+  body.light-mode #chartContainer {
+    background: #f0f0f0;
+    color: #007f7f;
   }
 </style>
 </head>
@@ -150,6 +234,22 @@
     <label>
       <input type="checkbox" id="enableNotifications" /> Benachrichtigungen aktivieren
     </label>
+  </div>
+
+  <div id="targetInputContainer">
+    <label for="dailyTargetInput">🎯 Tagesziel:</label><br />
+    <input type="number" id="dailyTargetInput" min="1" max="1000" step="1" style="width: 60px;" />
+  </div>
+
+  <div id="fontSelectContainer">
+    <label for="fontSelect">🔤 Schriftart wählen:</label><br />
+    <select id="fontSelect" style="width: 100%;">
+      <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI (Standard)</option>
+      <option value="'Arial Black', Gadget, sans-serif">Arial Black</option>
+      <option value="'Courier New', Courier, monospace">Courier New</option>
+      <option value="'Georgia', serif">Georgia</option>
+      <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans MS</option>
+    </select>
   </div>
 </div>
 
@@ -168,8 +268,12 @@
   </select>
 </div>
 
-<div id="progressBarContainer" style="width: 100%; max-width: 600px; margin: 0 auto 20px; background: #444; border-radius: 10px; overflow: hidden;">
-  <div id="progressBar" style="height: 20px; width: 0%; background: linear-gradient(to right, #00ffcc, #007f7f); text-align: right; color: #fff; font-size: 12px; padding-right: 5px;"></div>
+<div id="progressBarContainer">
+  <div id="progressBar">0%</div>
+</div>
+
+<div id="chartContainer">
+  <canvas id="progressChart" aria-label="Diagramm der Liegestütz-Werte" role="img"></canvas>
 </div>
 
 <input type="text" id="searchInput" placeholder="Datum eingeben (z. B. 29.06.2025) & Enter drücken" />
@@ -184,6 +288,9 @@
   <tbody id="trackerTable"></tbody>
 </table>
 
+<!-- Chart.js einbinden -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
   const tableBody = document.getElementById('trackerTable');
   const statsBox = document.getElementById('statsBox');
@@ -197,187 +304,375 @@
   const exportBtn = document.getElementById('exportBtn');
   const dateFilter = document.getElementById('dateFilter');
   const progressBar = document.getElementById('progressBar');
+  const dailyTargetInput = document.getElementById('dailyTargetInput');
+  const fontSelect = document.getElementById('fontSelect');
+
+  // Für Chart
+  const ctx = document.getElementById('progressChart').getContext('2d');
+  let progressChart;
 
   const startDate = new Date();
   const endDate = new Date(startDate);
   endDate.setFullYear(endDate.getFullYear() + 5);
 
   const allInputs = [];
+  // Tagesziel default (falls nicht gesetzt)
+  let dailyTarget = parseInt(localStorage.getItem('dailyTarget')) || 50;
 
-  // Hilfsfunktion: Datum formatieren TT.MM.JJJJ
+  // --- Helferfunktionen ---
   function formatDate(date) {
     const d = String(date.getDate()).padStart(2, '0');
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const y = date.getFullYear();
     return `${d}.${m}.${y}`;
   }
-
-  // Hilfsfunktion: ID für Zeile generieren (z.B. row_29062025)
-  function formatId(date) {
-    const d = String(date.getDate()).padStart(2, '0');
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const y = date.getFullYear();
-    return `row_${d}${m}${y}`;
+  function parseDateString(str) {
+    // Erlaubt dd.mm.yyyy und yyyy-mm-dd
+    if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) {
+      const [d,m,y] = str.split('.');
+      return new Date(`${y}-${m}-${d}`);
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+      return new Date(str);
+    }
+    return null;
   }
-
-  // Tabelle mit Daten füllen (5 Jahre nach vorne)
-  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-    const dateCopy = new Date(d);
-    const formatted = formatDate(dateCopy);
-    const id = formatId(dateCopy);
-    let savedValue = localStorage.getItem(id);
-    const now = new Date();
-    if (!savedValue) {
-      if (dateCopy < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
-        savedValue = '/';
-      } else {
-        savedValue = '';
+  function showNotification(message) {
+    if (enableNotificationsCheckbox.checked && "Notification" in window) {
+      if (Notification.permission === "granted") {
+        new Notification(message);
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+          if (permission === "granted") new Notification(message);
+        });
       }
     }
+  }
+  function saveData() {
+    localStorage.setItem('liegestuetzData', JSON.stringify(allInputs));
+    localStorage.setItem('dailyTarget', dailyTarget);
+    localStorage.setItem('darkMode', darkToggle.checked ? 'dark' : 'light');
+    localStorage.setItem('fontFamily', fontSelect.value);
+  }
+  function loadData() {
+    const data = localStorage.getItem('liegestuetzData');
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) {
+        allInputs.length = 0;
+        parsed.forEach(e => allInputs.push(e));
+      }
+    }
+    const storedTarget = localStorage.getItem('dailyTarget');
+    if (storedTarget) dailyTarget = parseInt(storedTarget);
+
+    const darkMode = localStorage.getItem('darkMode');
+    if (darkMode === 'dark') {
+      darkToggle.checked = true;
+      document.body.classList.remove('light-mode');
+    } else {
+      darkToggle.checked = false;
+      document.body.classList.add('light-mode');
+    }
+
+    const fontStored = localStorage.getItem('fontFamily');
+    if (fontStored) {
+      fontSelect.value = fontStored;
+      document.body.style.fontFamily = fontStored;
+    }
+  }
+  function createTableRow(dateStr, value) {
     const tr = document.createElement('tr');
-    tr.id = id;
-    tr.innerHTML = `<td>${formatted}</td><td><input type="text" value="${savedValue}" data-id="${id}" maxlength="4" /></td>`;
-    tableBody.appendChild(tr);
-    allInputs.push({ date: dateCopy, id });
-  }
 
-  // Eingaben validieren & speichern
-  document.addEventListener('input', (e) => {
-    if (e.target && e.target.tagName === 'INPUT') {
-      const id = e.target.dataset.id;
-      const val = e.target.value.trim();
-      if (val === '' || /^[0-9]+$/.test(val)) {
-        localStorage.setItem(id, val);
-        updateStats();
-      }
-    }
-  });
+    // Datum
+    const tdDate = document.createElement('td');
+    tdDate.textContent = dateStr;
+    tr.appendChild(tdDate);
 
-  // Suche nach Datum & Scrollen
-  searchInput.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-      const val = this.value.trim().replaceAll('.', '');
-      const rowId = 'row_' + val;
-      const row = document.getElementById(rowId);
-      if (row) {
-        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        row.classList.add('highlight');
-        setTimeout(() => row.classList.remove('highlight'), 1500);
+    // Eingabefeld
+    const tdInput = document.createElement('td');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = value;
+    input.dataset.date = dateStr;
+    tdInput.appendChild(input);
+    tr.appendChild(tdInput);
+
+    input.addEventListener('input', () => {
+      // Wert nur Zahlen
+      let val = input.value.replace(/\D/g, '');
+      input.value = val;
+
+      // Aktualisieren in allInputs
+      const idx = allInputs.findIndex(e => e.date === dateStr);
+      if (idx >= 0) {
+        allInputs[idx].value = val;
       } else {
-        alert('Kein Eintrag für dieses Datum gefunden.');
+        allInputs.push({ date: dateStr, value: val });
       }
-    }
-  });
-
-  // Statistik aktualisieren
-  function updateStats() {
-    const now = new Date();
-    let sum7 = 0, sum30 = 0, sum365 = 0, sumAll = 0;
-    let todayId = formatId(now);
-    let todayCount = parseInt(localStorage.getItem(todayId) || '0', 10);
-
-    allInputs.forEach(({ date, id }) => {
-      let valStr = localStorage.getItem(id) || '';
-      if (valStr === '/') valStr = '0';
-      const val = parseInt(valStr, 10);
-      if (!isNaN(val)) {
-        const diffDays = (now - date) / (1000 * 3600 * 24);
-        if (diffDays < 7) sum7 += val;
-        if (diffDays < 30) sum30 += val;
-        if (diffDays < 365) sum365 += val;
-        sumAll += val;
-      }
+      highlightRow(tr);
+      saveData();
+      updateStats();
+      updateProgressBar();
+      updateChart();
     });
 
-    // Fortschrittsanzeige (heute / 1000)
-    const maxLiegestuetze = 50;
-const progressPercent = Math.min(100, (todayCount / maxLiegestuetze) * 100);
-progressBar.style.width = progressPercent + '%';
-progressBar.textContent = `${todayCount} / ${maxLiegestuetze}`;
-    
+    return tr;
+  }
+  function highlightRow(row) {
+    row.classList.add('highlight');
+    setTimeout(() => row.classList.remove('highlight'), 1500);
+  }
+  function updateTable(filterDate = null) {
+    tableBody.innerHTML = '';
+    let filtered = allInputs.slice();
+
+    if (filterDate) {
+      filtered = filtered.filter(e => e.date === filterDate);
+      if (filtered.length === 0) {
+        statsBox.innerHTML = `<em>Keine Einträge für den ${filterDate}.</em>`;
+      }
+    } else {
+      // Sortieren nach Datum aufsteigend
+      filtered.sort((a,b) => {
+        const d1 = parseDateString(a.date);
+        const d2 = parseDateString(b.date);
+        return d1 - d2;
+      });
+    }
+
+    for (const item of filtered) {
+      tableBody.appendChild(createTableRow(item.date, item.value));
+    }
+  }
+  function updateStats() {
+    if (allInputs.length === 0) {
+      statsBox.innerHTML = "<em>Keine Daten vorhanden.</em>";
+      return;
+    }
+    // Filter aktuell nach Filter-Auswahl
+    let filtered = applyDateFilter(allInputs);
+
+    if (filtered.length === 0) {
+      statsBox.innerHTML = "<em>Keine Daten im gewählten Zeitraum.</em>";
+      return;
+    }
+
+    let maxVal = 0;
+    let minVal = Number.MAX_SAFE_INTEGER;
+    let sum = 0;
+    let maxDate = '';
+    let minDate = '';
+
+    for (const e of filtered) {
+      const val = parseInt(e.value) || 0;
+      if (val > maxVal) {
+        maxVal = val;
+        maxDate = e.date;
+      }
+      if (val < minVal) {
+        minVal = val;
+        minDate = e.date;
+      }
+      sum += val;
+    }
+    const avg = (sum / filtered.length).toFixed(1);
     statsBox.innerHTML = `
-      <p><strong>Heute:</strong> ${todayCount} Liegestütze</p>
-      <p><strong>Letzte 7 Tage:</strong> ${sum7}</p>
-      <p><strong>Letzte 30 Tage:</strong> ${sum30}</p>
-      <p><strong>Letztes Jahr:</strong> ${sum365}</p>
-      <p><strong>Gesamt:</strong> ${sumAll}</p>
+      <p><strong>Maximaler Wert:</strong> ${maxVal} Liegestütze am ${maxDate}</p>
+      <p><strong>Minimaler Wert:</strong> ${minVal} Liegestütze am ${minDate}</p>
+      <p><strong>Durchschnitt:</strong> ${avg} Liegestütze</p>
+      <p><strong>Einträge:</strong> ${filtered.length}</p>
+      <p><strong>Tagesziel:</strong> ${dailyTarget} Liegestütze</p>
     `;
   }
-  updateStats();
-
-  // Dark Mode Ein-/Ausschalten
-  darkToggle.addEventListener('change', () => {
-    if (darkToggle.checked) {
-      document.body.style.backgroundColor = '#1c1c1c';
-      document.body.style.color = '#f0f0f0';
+  function updateProgressBar() {
+    // Aktueller Tag
+    const todayStr = formatDate(new Date());
+    const todayEntry = allInputs.find(e => e.date === todayStr);
+    let val = todayEntry ? parseInt(todayEntry.value) || 0 : 0;
+    let percent = Math.min(100, (val / dailyTarget) * 100);
+    progressBar.style.width = percent + '%';
+    progressBar.textContent = Math.round(percent) + '%';
+    if (percent >= 100) {
+      progressBar.style.background = 'linear-gradient(90deg, #00ff00, #007f00)';
+      showNotification("Herzlichen Glückwunsch! Tagesziel erreicht!");
     } else {
-      document.body.style.backgroundColor = '#fff';
-      document.body.style.color = '#000';
+      progressBar.style.background = 'linear-gradient(90deg, #00ffcc, #007f7f)';
     }
-  });
+  }
+  function applyDateFilter(data) {
+    const val = dateFilter.value;
+    if (val === 'all') return data;
+    const days = parseInt(val);
+    const now = new Date();
+    const filtered = data.filter(e => {
+      const d = parseDateString(e.date);
+      if (!d) return false;
+      return (now - d) <= days * 86400000; // ms in day
+    });
+    return filtered;
+  }
+  function updateChart() {
+    const filtered = applyDateFilter(allInputs);
+    const sorted = filtered.slice().sort((a,b) => {
+      const d1 = parseDateString(a.date);
+      const d2 = parseDateString(b.date);
+      return d1 - d2;
+    });
+    const labels = sorted.map(e => e.date);
+    const values = sorted.map(e => parseInt(e.value) || 0);
 
-  // Settings Menü öffnen/ schließen
+    if (progressChart) progressChart.destroy();
+
+    progressChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Liegestütze',
+          data: values,
+          fill: true,
+          backgroundColor: 'rgba(0,255,204,0.2)',
+          borderColor: 'rgba(0,255,204,1)',
+          borderWidth: 3,
+          tension: 0.25,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: 'rgba(0,255,204,1)',
+          pointBorderColor: '#004d40'
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: {
+          duration: 700,
+          easing: 'easeInOutQuad'
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            suggestedMax: dailyTarget + 20,
+            ticks: { stepSize: 10 }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              color: document.body.classList.contains('light-mode') ? '#007f7f' : '#7df9ff',
+              font: { size: 14 }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // --- Init-Daten (erstes Laden) ---
+  function init() {
+    loadData();
+
+    // Initial tägliches Ziel anzeigen
+    dailyTargetInput.value = dailyTarget;
+
+    // Ersten Aufruf mit Filter "Alle"
+    updateTable();
+    updateStats();
+    updateProgressBar();
+    updateChart();
+
+    // Schriftart setzen
+    document.body.style.fontFamily = fontSelect.value;
+  }
+  init();
+
+  // --- Eventlistener ---
   settingsIcon.addEventListener('click', () => {
     if (settingsMenu.style.display === 'block') {
       settingsMenu.style.display = 'none';
-      notificationToggleMenu.style.display = 'none';
     } else {
       settingsMenu.style.display = 'block';
     }
   });
 
-  // Klick auf Benachrichtigungen im Menü
   notificationToggle.addEventListener('click', () => {
-    if (notificationToggleMenu.style.display === 'block') {
-      notificationToggleMenu.style.display = 'none';
-    } else {
-      notificationToggleMenu.style.display = 'block';
-    }
+    notificationToggleMenu.style.display = notificationToggleMenu.style.display === 'block' ? 'none' : 'block';
   });
-
-  // Lade Benachrichtigungseinstellung
-  const notifEnabled = localStorage.getItem('notifEnabled') === 'true';
-  enableNotificationsCheckbox.checked = notifEnabled;
 
   enableNotificationsCheckbox.addEventListener('change', () => {
-    localStorage.setItem('notifEnabled', enableNotificationsCheckbox.checked);
+    saveData();
   });
 
-  // Filterfunktion (Datum)
-  dateFilter.addEventListener('change', () => {
-    const val = dateFilter.value;
-    const now = new Date();
-    for (const { date, id } of allInputs) {
-      const row = document.getElementById(id);
-      if (!row) continue;
-      if (val === 'all') {
-        row.style.display = '';
-        continue;
+  darkToggle.addEventListener('change', () => {
+    if (darkToggle.checked) {
+      document.body.classList.remove('light-mode');
+    } else {
+      document.body.classList.add('light-mode');
+    }
+    saveData();
+    updateChart();
+  });
+
+  dailyTargetInput.addEventListener('change', () => {
+    let val = parseInt(dailyTargetInput.value);
+    if (isNaN(val) || val < 1) val = 50;
+    dailyTarget = val;
+    dailyTargetInput.value = dailyTarget;
+    saveData();
+    updateStats();
+    updateProgressBar();
+    updateChart();
+  });
+
+  fontSelect.addEventListener('change', () => {
+    document.body.style.fontFamily = fontSelect.value;
+    saveData();
+  });
+
+  exportBtn.addEventListener('click', () => {
+    if (allInputs.length === 0) {
+      alert("Keine Daten zum Exportieren vorhanden.");
+      return;
+    }
+    const csvContent = "data:text/csv;charset=utf-8," +
+      ["Datum,Liegestütze"].concat(allInputs.map(e => `${e.date},${e.value}`)).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "liegestuetz_daten.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const val = searchInput.value.trim();
+      if (!val) {
+        updateTable();
+        updateStats();
+        updateProgressBar();
+        updateChart();
+        return;
       }
-      const daysAgo = (now - date) / (1000 * 3600 * 24);
-      if (daysAgo <= parseInt(val)) {
-        row.style.display = '';
-      } else {
-        row.style.display = 'none';
+      const d = parseDateString(val);
+      if (!d) {
+        alert('Ungültiges Datumsformat! Bitte im Format TT.MM.JJJJ eingeben.');
+        return;
       }
+      const dateStr = formatDate(d);
+      updateTable(dateStr);
+      updateStats();
+      updateProgressBar();
+      updateChart();
     }
   });
 
-  // Export Button
-  exportBtn.addEventListener('click', () => {
-    const data = {};
-    allInputs.forEach(({ id }) => {
-      data[id] = localStorage.getItem(id) || '';
-    });
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'liegestuetz-data.json';
-    a.click();
-    URL.revokeObjectURL(url);
+  dateFilter.addEventListener('change', () => {
+    updateStats();
+    updateChart();
+    updateTable();
   });
-</script>
 
+</script>
 </body>
 </html>
