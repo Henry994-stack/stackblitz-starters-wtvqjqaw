@@ -154,7 +154,7 @@
   <body>
     <h1>Liegestütz-Tracker</h1>
 
-    <div id="settingsIcon">⚙</div>
+    <div id="settingsIcon">⚙️</div>
     <div id="settingsMenu">
       <ul>
         <li id="notificationToggle">🔔 Benachrichtigungen</li>
@@ -320,13 +320,13 @@
           motivation = '<em>Wow! Du bist richtig fit! 👏</em>';
         }
 
-        statsBox.innerHTML = `
+        statsBox.innerHTML = 
           <p><strong>Letzte 7 Tage:</strong> ${sum7} Liegestütze</p>
           <p><strong>Letzte 30 Tage:</strong> ${sum30} Liegestütze</p>
           <p><strong>Letztes Jahr:</strong> ${sum365} Liegestütze</p>
           <p><strong>Gesamt:</strong> ${sumAll} Liegestütze</p>
           <p>${motivation}</p>
-        `;
+        ;
 
         updateProgressBar(sumAll);
       }
