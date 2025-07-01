@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -141,7 +142,7 @@
 <body>
 <h1>Liegestütz-Tracker</h1>
 
-<div id="settingsIcon" title="Einstellungen">⚙</div>
+<div id="settingsIcon" title="Einstellungen">⚙️</div>
 <div id="settingsMenu">
   <ul>
     <li id="notificationToggle">🔔 Benachrichtigungen</li>
@@ -209,7 +210,7 @@
     const d = String(date.getDate()).padStart(2, '0');
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const y = date.getFullYear();
-    return ${d}.${m}.${y};
+    return `${d}.${m}.${y}`;
   }
 
   // Hilfsfunktion: ID für Zeile generieren (z.B. row_29062025)
@@ -217,7 +218,7 @@
     const d = String(date.getDate()).padStart(2, '0');
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const y = date.getFullYear();
-    return row_${d}${m}${y};
+    return `row_${d}${m}${y}`;
   }
 
   // Tabelle mit Daten füllen (5 Jahre nach vorne)
@@ -236,7 +237,7 @@
     }
     const tr = document.createElement('tr');
     tr.id = id;
-    tr.innerHTML = <td>${formatted}</td><td><input type="text" value="${savedValue}" data-id="${id}" maxlength="4" /></td>;
+    tr.innerHTML = `<td>${formatted}</td><td><input type="text" value="${savedValue}" data-id="${id}" maxlength="4" /></td>`;
     tableBody.appendChild(tr);
     allInputs.push({ date: dateCopy, id });
   }
@@ -293,7 +294,7 @@
     const maxLiegestuetze = 50;
 const progressPercent = Math.min(100, (todayCount / maxLiegestuetze) * 100);
 progressBar.style.width = progressPercent + '%';
-progressBar.textContent = ${todayCount} / ${maxLiegestuetze};
+progressBar.textContent = `${todayCount} / ${maxLiegestuetze}`;
     
     statsBox.innerHTML = `
       <p><strong>Heute:</strong> ${todayCount} Liegestütze</p>
