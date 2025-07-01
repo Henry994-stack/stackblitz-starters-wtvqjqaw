@@ -1,362 +1,382 @@
 <!DOCTYPE html>
 <html lang="de">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Liegestütz-Tracker</title>
-    <!-- iPhone App-Icon -->
-    <link rel="apple-touch-icon" href="icon.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #1c1c1c;
-        color: #f0f0f0;
-        margin: 20px;
-        padding: 0;
+<head>
+<meta charset="UTF-8" />
+<title>Liegestütz-Tracker</title>
+<link rel="apple-touch-icon" href="icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #1c1c1c;
+    color: #f0f0f0;
+    margin: 20px;
+    padding: 0;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  h1 {
+    text-align: center;
+    color: #00ffcc;
+    margin-bottom: 10px;
+  }
+  #settingsIcon {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    font-size: 48px;
+    cursor: pointer;
+    z-index: 1000;
+    user-select: none;
+  }
+  #settingsMenu {
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    background-color: #2c2c2c;
+    border: 1px solid #444;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 0 10px rgba(0, 255, 200, 0.3);
+    display: none;
+    z-index: 999;
+    width: 200px;
+  }
+  #settingsMenu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  #settingsMenu li {
+    padding: 8px;
+    cursor: pointer;
+    color: #7df9ff;
+  }
+  #settingsMenu li:hover {
+    background-color: #444;
+  }
+  #notificationToggleMenu {
+    display: none;
+    margin-top: 10px;
+    color: #fff;
+  }
+  #notificationToggleMenu label {
+    cursor: pointer;
+  }
+  #statsBox {
+    background-color: #262626;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px auto;
+    max-width: 600px;
+    box-shadow: 0 0 15px rgba(0, 255, 200, 0.3);
+    border: 1px solid #333;
+  }
+  #statsBox p {
+    margin: 5px 0;
+    font-size: 16px;
+  }
+  #statsBox p strong {
+    color: #7df9ff;
+  }
+  #statsBox em {
+    color: #ffd700;
+    font-style: normal;
+    font-weight: bold;
+  }
+  #searchInput {
+    width: 100%;
+    max-width: 300px;
+    margin: 10px auto 20px;
+    display: block;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #333;
+    color: white;
+    box-shadow: 0 0 5px #7df9ff;
+  }
+  table {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    border-collapse: collapse;
+  }
+  th {
+    background-color: #333;
+    color: #7df9ff;
+    padding: 10px;
+  }
+  td {
+    border-bottom: 1px solid #444;
+    padding: 10px;
+    text-align: left;
+  }
+  input[type='text'] {
+    width: 80px;
+    padding: 6px;
+    background-color: #222;
+    color: #f0f0f0;
+    border: 1px solid #555;
+    border-radius: 5px;
+    box-shadow: 0 0 5px #444;
+  }
+  .highlight {
+    animation: blinkHighlight 1.5s ease-out;
+  }
+  @keyframes blinkHighlight {
+    0% {
+      background-color: #ffb347;
+    }
+    50% {
+      background-color: #ffd580;
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+</style>
+</head>
+<body>
+<h1>Liegestütz-Tracker</h1>
+
+<div id="settingsIcon" title="Einstellungen">⚙️</div>
+<div id="settingsMenu">
+  <ul>
+    <li id="notificationToggle">🔔 Benachrichtigungen</li>
+  </ul>
+  <div id="notificationToggleMenu">
+    <label>
+      <input type="checkbox" id="enableNotifications" /> Benachrichtigungen aktivieren
+    </label>
+  </div>
+</div>
+
+<div id="statsBox"></div>
+
+<div style="text-align: center; margin: 10px 0;">
+  <button id="exportBtn">📁 Daten exportieren</button>
+  <label style="margin-left: 20px;">
+    <input type="checkbox" id="darkModeToggle" checked /> 🌙 Dark Mode
+  </label>
+  <select id="dateFilter" style="margin-left: 20px;">
+    <option value="all">Alle</option>
+    <option value="7">Letzte 7 Tage</option>
+    <option value="30">Letzte 30 Tage</option>
+    <option value="365">Letztes Jahr</option>
+  </select>
+</div>
+
+<div id="progressBarContainer" style="width: 100%; max-width: 600px; margin: 0 auto 20px; background: #444; border-radius: 10px; overflow: hidden;">
+  <div id="progressBar" style="height: 20px; width: 0%; background: linear-gradient(to right, #00ffcc, #007f7f); text-align: right; color: #fff; font-size: 12px; padding-right: 5px;"></div>
+</div>
+
+<input type="text" id="searchInput" placeholder="Datum eingeben (z. B. 29.06.2025) & Enter drücken" />
+
+<table>
+  <thead>
+    <tr>
+      <th>Datum</th>
+      <th>Liegestütze</th>
+    </tr>
+  </thead>
+  <tbody id="trackerTable"></tbody>
+</table>
+
+<script>
+  const tableBody = document.getElementById('trackerTable');
+  const statsBox = document.getElementById('statsBox');
+  const searchInput = document.getElementById('searchInput');
+  const settingsIcon = document.getElementById('settingsIcon');
+  const settingsMenu = document.getElementById('settingsMenu');
+  const notificationToggle = document.getElementById('notificationToggle');
+  const notificationToggleMenu = document.getElementById('notificationToggleMenu');
+  const enableNotificationsCheckbox = document.getElementById('enableNotifications');
+  const darkToggle = document.getElementById('darkModeToggle');
+  const exportBtn = document.getElementById('exportBtn');
+  const dateFilter = document.getElementById('dateFilter');
+  const progressBar = document.getElementById('progressBar');
+
+  const startDate = new Date();
+  const endDate = new Date(startDate);
+  endDate.setFullYear(endDate.getFullYear() + 5);
+
+  const allInputs = [];
+
+  // Hilfsfunktion: Datum formatieren TT.MM.JJJJ
+  function formatDate(date) {
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    return `${d}.${m}.${y}`;
+  }
+
+  // Hilfsfunktion: ID für Zeile generieren (z.B. row_29062025)
+  function formatId(date) {
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    return `row_${d}${m}${y}`;
+  }
+
+  // Tabelle mit Daten füllen (5 Jahre nach vorne)
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    const dateCopy = new Date(d);
+    const formatted = formatDate(dateCopy);
+    const id = formatId(dateCopy);
+    let savedValue = localStorage.getItem(id);
+    const now = new Date();
+    if (!savedValue) {
+      if (dateCopy < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+        savedValue = '/';
+      } else {
+        savedValue = '';
       }
+    }
+    const tr = document.createElement('tr');
+    tr.id = id;
+    tr.innerHTML = `<td>${formatted}</td><td><input type="text" value="${savedValue}" data-id="${id}" maxlength="4" /></td>`;
+    tableBody.appendChild(tr);
+    allInputs.push({ date: dateCopy, id });
+  }
 
-      h1 {
-        text-align: center;
-        color: #00ffcc;
-        margin-bottom: 10px;
+  // Eingaben validieren & speichern
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.tagName === 'INPUT') {
+      const id = e.target.dataset.id;
+      const val = e.target.value.trim();
+      if (val === '' || /^[0-9]+$/.test(val)) {
+        localStorage.setItem(id, val);
+        updateStats();
       }
+    }
+  });
 
-      #settingsIcon {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        font-size: 48px;
-        cursor: pointer;
-        z-index: 1000;
+  // Suche nach Datum & Scrollen
+  searchInput.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+      const val = this.value.trim().replaceAll('.', '');
+      const rowId = 'row_' + val;
+      const row = document.getElementById(rowId);
+      if (row) {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        row.classList.add('highlight');
+        setTimeout(() => row.classList.remove('highlight'), 1500);
+      } else {
+        alert('Kein Eintrag für dieses Datum gefunden.');
       }
+    }
+  });
 
-      #settingsMenu {
-        position: fixed;
-        top: 40px;
-        right: 10px;
-        background-color: #2c2c2c;
-        border: 1px solid #444;
-        border-radius: 10px;
-        padding: 10px;
-        box-shadow: 0 0 10px rgba(0, 255, 200, 0.2);
-        display: none;
-        z-index: 999;
+  // Statistik aktualisieren
+  function updateStats() {
+    const now = new Date();
+    let sum7 = 0, sum30 = 0, sum365 = 0, sumAll = 0;
+    let todayId = formatId(now);
+    let todayCount = parseInt(localStorage.getItem(todayId) || '0', 10);
+
+    allInputs.forEach(({ date, id }) => {
+      let valStr = localStorage.getItem(id) || '';
+      if (valStr === '/') valStr = '0';
+      const val = parseInt(valStr, 10);
+      if (!isNaN(val)) {
+        const diffDays = (now - date) / (1000 * 3600 * 24);
+        if (diffDays < 7) sum7 += val;
+        if (diffDays < 30) sum30 += val;
+        if (diffDays < 365) sum365 += val;
+        sumAll += val;
       }
+    });
 
-      #settingsMenu ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
+    // Fortschrittsanzeige (heute / 1000)
+    const progressPercent = Math.min(100, (todayCount / 1000) * 100);
+    progressBar.style.width = progressPercent + '%';
+    progressBar.textContent = `${todayCount} / 1000`;
+
+    statsBox.innerHTML = `
+      <p><strong>Heute:</strong> ${todayCount} Liegestütze</p>
+      <p><strong>Letzte 7 Tage:</strong> ${sum7}</p>
+      <p><strong>Letzte 30 Tage:</strong> ${sum30}</p>
+      <p><strong>Letztes Jahr:</strong> ${sum365}</p>
+      <p><strong>Gesamt:</strong> ${sumAll}</p>
+    `;
+  }
+  updateStats();
+
+  // Dark Mode Ein-/Ausschalten
+  darkToggle.addEventListener('change', () => {
+    if (darkToggle.checked) {
+      document.body.style.backgroundColor = '#1c1c1c';
+      document.body.style.color = '#f0f0f0';
+    } else {
+      document.body.style.backgroundColor = '#fff';
+      document.body.style.color = '#000';
+    }
+  });
+
+  // Settings Menü öffnen/ schließen
+  settingsIcon.addEventListener('click', () => {
+    if (settingsMenu.style.display === 'block') {
+      settingsMenu.style.display = 'none';
+      notificationToggleMenu.style.display = 'none';
+    } else {
+      settingsMenu.style.display = 'block';
+    }
+  });
+
+  // Klick auf Benachrichtigungen im Menü
+  notificationToggle.addEventListener('click', () => {
+    if (notificationToggleMenu.style.display === 'block') {
+      notificationToggleMenu.style.display = 'none';
+    } else {
+      notificationToggleMenu.style.display = 'block';
+    }
+  });
+
+  // Lade Benachrichtigungseinstellung
+  const notifEnabled = localStorage.getItem('notifEnabled') === 'true';
+  enableNotificationsCheckbox.checked = notifEnabled;
+
+  enableNotificationsCheckbox.addEventListener('change', () => {
+    localStorage.setItem('notifEnabled', enableNotificationsCheckbox.checked);
+  });
+
+  // Filterfunktion (Datum)
+  dateFilter.addEventListener('change', () => {
+    const val = dateFilter.value;
+    const now = new Date();
+    for (const { date, id } of allInputs) {
+      const row = document.getElementById(id);
+      if (!row) continue;
+      if (val === 'all') {
+        row.style.display = '';
+        continue;
       }
-
-      #settingsMenu li {
-        padding: 8px;
-        cursor: pointer;
-        color: #7df9ff;
+      const daysAgo = (now - date) / (1000 * 3600 * 24);
+      if (daysAgo <= parseInt(val)) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
       }
+    }
+  });
 
-      #settingsMenu li:hover {
-        background-color: #444;
-      }
+  // Export Button
+  exportBtn.addEventListener('click', () => {
+    const data = {};
+    allInputs.forEach(({ id }) => {
+      data[id] = localStorage.getItem(id) || '';
+    });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'liegestuetz-data.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+</script>
 
-      #notificationToggleMenu {
-        display: none;
-        margin-top: 10px;
-        color: #fff;
-      }
-
-      #statsBox {
-        background-color: #262626;
-        padding: 20px;
-        border-radius: 10px;
-        margin: 20px auto;
-        max-width: 600px;
-        box-shadow: 0 0 15px rgba(0, 255, 200, 0.2);
-        border: 1px solid #333;
-      }
-
-      #statsBox p {
-        margin: 5px 0;
-        font-size: 16px;
-      }
-
-      #statsBox p strong {
-        color: #7df9ff;
-      }
-
-      #statsBox em {
-        color: #ffd700;
-        font-style: normal;
-        font-weight: bold;
-      }
-
-      #searchInput {
-        width: 100%;
-        max-width: 300px;
-        margin: 10px auto 20px;
-        display: block;
-        padding: 10px;
-        font-size: 16px;
-        border: none;
-        border-radius: 5px;
-        background-color: #333;
-        color: white;
-        box-shadow: 0 0 5px #7df9ff;
-      }
-
-      table {
-        width: 100%;
-        max-width: 600px;
-        margin: 0 auto;
-        border-collapse: collapse;
-      }
-
-      th {
-        background-color: #333;
-        color: #7df9ff;
-        padding: 10px;
-      }
-
-      td {
-        border-bottom: 1px solid #444;
-        padding: 10px;
-        text-align: left;
-      }
-
-      input[type='number'] {
-        width: 80px;
-        padding: 6px;
-        background-color: #222;
-        color: #f0f0f0;
-        border: 1px solid #555;
-        border-radius: 5px;
-        box-shadow: 0 0 5px #444;
-      }
-
-      .highlight {
-        animation: blinkHighlight 1.5s ease-out;
-      }
-
-      @keyframes blinkHighlight {
-        0% {
-          background-color: #ffb347;
-        }
-        50% {
-          background-color: #ffd580;
-        }
-        100% {
-          background-color: transparent;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Liegestütz-Tracker</h1>
-
-    <div id="settingsIcon">⚙</div>
-    <div id="settingsMenu">
-      <ul>
-        <li id="notificationToggle">🔔 Benachrichtigungen</li>
-      </ul>
-      <div id="notificationToggleMenu">
-        <label>
-          <input type="checkbox" id="enableNotifications"> Benachrichtigungen aktivieren
-        </label>
-      </div>
-    </div>
-
-    <div id="statsBox"></div>
-
-    <input
-      type="text"
-      id="searchInput"
-      placeholder="Datum eingeben (z. B. 29.06.2025) & Enter drücken"
-    />
-
-    <table>
-      <thead>
-        <tr>
-          <th>Datum</th>
-          <th>Liegestütze</th>
-        </tr>
-      </thead>
-      <tbody id="trackerTable"></tbody>
-    </table>
-
-    <script>
-      const tableBody = document.getElementById('trackerTable');
-      const statsBox = document.getElementById('statsBox');
-      const searchInput = document.getElementById('searchInput');
-      const settingsIcon = document.getElementById('settingsIcon');
-      const settingsMenu = document.getElementById('settingsMenu');
-      const notificationToggle = document.getElementById('notificationToggle');
-      const notificationToggleMenu = document.getElementById('notificationToggleMenu');
-      const enableNotificationsCheckbox = document.getElementById('enableNotifications');
-
-      const startDate = new Date();
-      const endDate = new Date(startDate);
-      endDate.setFullYear(endDate.getFullYear() + 5);
-
-      const allInputs = [];
-
-      function formatDate(date) {
-        const d = String(date.getDate()).padStart(2, '0');
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const y = date.getFullYear();
-        return ${d}.${m}.${y};
-      }
-
-      function formatId(date) {
-        const d = String(date.getDate()).padStart(2, '0');
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const y = date.getFullYear();
-        return row_${d}${m}${y};
-      }
-
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const dateCopy = new Date(d);
-        const formatted = formatDate(d);
-        const id = formatId(d);
-        let savedValue = localStorage.getItem(id);
-        const now = new Date();
-        // Wenn kein Wert gespeichert und Datum in der Vergangenheit (vor heute), dann temporär "/"
-        if (!savedValue) {
-          if (dateCopy < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
-            savedValue = '/';
-          } else {
-            savedValue = '';
-          }
-        }
-        const tr = document.createElement('tr');
-        tr.id = id;
-        tr.innerHTML = <td>${formatted}</td><td><input type="text" value="${savedValue}" data-id="${id}" maxlength="4"></td>;
-        tableBody.appendChild(tr);
-        allInputs.push({ date: dateCopy, id });
-      }
-
-      document.addEventListener('input', (e) => {
-        if (e.target && e.target.tagName === 'INPUT') {
-          const id = e.target.dataset.id;
-          const val = e.target.value.trim();
-          // Speichere nur, wenn val eine Zahl ist oder leer (leeren Input löschen)
-          if (val === '' || /^[0-9]+$/.test(val)) {
-            localStorage.setItem(id, val);
-            updateStats();
-          }
-        }
-      });
-
-      searchInput.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-          const val = this.value.trim().replaceAll('.', '');
-          const rowId = 'row_' + val;
-          const row = document.getElementById(rowId);
-          if (row) {
-            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            row.classList.add('highlight');
-            setTimeout(() => row.classList.remove('highlight'), 1500);
-          } else {
-            alert('Kein Eintrag für dieses Datum gefunden.');
-          }
-        }
-      });
-
-      function updateStats() {
-        const now = new Date();
-        let sum7 = 0, sum30 = 0, sum365 = 0, sumAll = 0;
-        let todayId = formatId(now);
-        let todayCount = parseInt(localStorage.getItem(todayId) || '0', 10);
-
-        allInputs.forEach(({ date, id }) => {
-          let valStr = localStorage.getItem(id) || '';
-          // Werte mit '/' ignorieren
-          if (valStr === '/') valStr = '0';
-          const val = parseInt(valStr, 10);
-          if (!isNaN(val)) {
-            const diffDays = (now - date) / (1000 * 60 * 60 * 24);
-            if (diffDays <= 7) sum7 += val;
-            if (diffDays <= 30) sum30 += val;
-            if (diffDays <= 365) sum365 += val;
-            sumAll += val;
-          }
-        });
-
-        let motivation = '';
-        if (todayCount === 0) {
-          motivation = '❗ Du hast heute noch keine Liegestütze gemacht – fang jetzt an!';
-        } else if (todayCount <= 20) {
-          motivation = '🙂 Guter Start – bleib dran!';
-        } else if (todayCount < 50) {
-          motivation = '💪 Stark! Weiter so!';
-        } else {
-          motivation = '🔥 Du bist eine Maschine – Respekt!';
-        }
-
-        statsBox.innerHTML = `
-          <p><strong>Letzte 7 Tage:</strong> ${sum7}</p>
-          <p><strong>Letzte 30 Tage:</strong> ${sum30}</p>
-          <p><strong>Letzte 365 Tage:</strong> ${sum365}</p>
-          <p><strong>Insgesamt:</strong> ${sumAll}</p>
-          <hr style="margin: 10px 0; border: none; border-top: 1px solid #444;">
-          <p><em>${motivation}</em></p>
-        `;
-      }
-
-      function scrollToToday() {
-        const todayId = formatId(new Date());
-        const row = document.getElementById(todayId);
-        if (row) {
-          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          row.classList.add('highlight');
-          setTimeout(() => row.classList.remove('highlight'), 1500);
-        }
-      }
-
-      function requestNotificationPermission() {
-        if ('Notification' in window && Notification.permission !== 'granted') {
-          Notification.requestPermission();
-        }
-      }
-
-      function scheduleNotification() {
-        if ('Notification' in window && Notification.permission === 'granted') {
-          const now = new Date();
-          const target = new Date();
-          target.setHours(16, 0, 0, 0);
-          if (now > target) target.setDate(target.getDate() + 1);
-
-          const timeout = target.getTime() - now.getTime();
-          setTimeout(() => {
-            new Notification('Zeit für Liegestütze!', {
-              body: '💪 Vergiss nicht dein Training heute!',
-            });
-            scheduleNotification();
-          }, timeout);
-        }
-      }
-
-      settingsIcon.addEventListener('click', () => {
-        settingsMenu.style.display = settingsMenu.style.display === 'block' ? 'none' : 'block';
-      });
-
-      notificationToggle.addEventListener('click', () => {
-        notificationToggleMenu.style.display = notificationToggleMenu.style.display === 'block' ? 'none' : 'block';
-      });
-
-      enableNotificationsCheckbox.addEventListener('change', () => {
-        if (enableNotificationsCheckbox.checked) {
-          requestNotificationPermission();
-          scheduleNotification();
-          alert('Benachrichtigungen aktiviert.');
-        } else {
-          alert('Benachrichtigungen deaktiviert.');
-        }
-      });
-
-      // Init
-      updateStats();
-      scrollToToday();
-    </script>
-  </body>
+</body>
 </html>
